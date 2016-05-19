@@ -1,7 +1,39 @@
-﻿var express = require('express'),  twitter = require('twitter'), request = require('request'), http = require('http'), async = require('async'), sync = require('sync-request'), util = require('util');
+// COMMENT IN FOR running on localhost
+//require('dotenv').load();
+var express = require('express'),
+twitter = require('twitter'),
+request = require('request'),
+http = require('http'),
+async = require('async'),
+sync = require('sync-request'),
+util = require('util');
+
+var HOD_API_KEY = null;
+
+function parseVCAPServices() {
+    console.log(process.env.VCAP_SERVICES);
+    vcap_svcs = JSON.parse(process.env.VCAP_SERVICES);
+    /*
+    VCAP_SERVICES="{
+      "dragoon": [
+        {
+          "credentials": {
+            "foo": "bar"
+          }
+        }
+      ];
+
+    */
+
+    api_key = vcap_svcs['hod_instance'][0]['credentials']['api_key']
+    console.log(HOD_API_KEY);
+    return(api_key);
+}
 
 function startServer(port) {
     var app = express();
+
+    HOD_API_KEY =parseVCAPServices();
 
     app.configure(function () {
         app.set('views', __dirname + '/views');
@@ -56,12 +88,12 @@ function search(socket) {
                 };
             }
             var cleanTweet = sanitize(tweetPrecis.message);
-            var sentimentServiceUrl = util.format("https://api.idolondemand.com/1/api/sync/analyzesentiment/v1?text=%s&apikey=" + process.env.IDOL_API, cleanTweet);
+            var sentimentServiceUrl = util.format("https://api.idolondemand.com/1/api/sync/analyzesentiment/v1?text=%s&apikey=" + HOD_API_KEY, cleanTweet);
             request(sentimentServiceUrl, packageAndEmitTweetSentiment(tweetPrecis));
         }
 
         var client = new twitter({
-           
+
 	    consumer_key: process.env.CONSUMER_KEY,
             consumer_secret: process.env.CONSUMER_SECRET,
             access_token_key: process.env.ACCESS_TOKEN_KEY,
